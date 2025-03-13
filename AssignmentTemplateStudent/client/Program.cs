@@ -29,12 +29,13 @@ public class Setting
 class ClientUDP
 {
 
-    //TODO: [Deserialize Setting.json]   
+ 
     static string configFile = @"../Setting.json";
     static Setting? setting;
     private static IPEndPoint? serverEndPoint;
     private static Socket? clientSocket;
-
+    
+    //TODO: [Deserialize Setting.json]  
     static void LoadSettings()
     {
         try

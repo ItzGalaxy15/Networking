@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.IO;
+using LibData;
 
 class Program
 {
@@ -67,6 +68,12 @@ public class ServerUDP
                 int receivedBytes = serverSocket.ReceiveFrom(buffer, ref clientEP);
                 string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
                 Console.WriteLine($"[Server] Received: {receivedMessage}");
+
+                Console.WriteLine("[Server] Sending WELCOME message...");
+            
+                var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Welcome from server" };
+                byte[] helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
+                serverSocket.SendTo(helloBytes, clientEP);
             }
         }
         catch (Exception ex)
