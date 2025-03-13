@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Data;
-using System.Data.SqlTypes;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.IO;
 
-using LibData;
-
-// ReceiveFrom();
 class Program
 {
     static void Main(string[] args)
@@ -27,23 +21,64 @@ public class Setting
     public string? ClientIPAddress { get; set; }
 }
 
-
-class ServerUDP
+public class ServerUDP
 {
     static string configFile = @"../Setting.json";
-    static string configContent = File.ReadAllText(configFile);
-    static Setting? setting = JsonSerializer.Deserialize<Setting>(configContent);
+    static Setting? setting;
+    static IPEndPoint serverEndpoint;
+    static Socket? serverSocket;
 
-    // TODO: [Read the JSON file and return the list of DNSRecords]
-
-
-
+    static void LoadSettings()
+    {
+        try
+        {
+            string configContent = File.ReadAllText(configFile);
+            setting = JsonSerializer.Deserialize<Setting>(configContent);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error reading settings file: " + ex.Message);
+            Environment.Exit(1);
+        }
+    }
 
     public static void start()
     {
-
-
         // TODO: [Create a socket and endpoints and bind it to the server IP address and port number]
+        try
+        {
+            LoadSettings();
+            if (setting == null || setting.ServerIPAddress == null)
+            {
+                Console.WriteLine("Invalid configuration file.");
+                return;
+            }
+            
+            IPEndPoint serverEndPoint = new(IPAddress.Any, setting.ServerPortNumber);
+            Socket serverSocket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            serverSocket.Bind(serverEndPoint);
+            Console.WriteLine($"[Server] Listening on {setting.ServerIPAddress}:{setting.ServerPortNumber}");
+
+            byte[] buffer = new byte[1024];
+            EndPoint clientEP = new IPEndPoint(IPAddress.Any, 0);
+
+            while (true)
+            {
+                int receivedBytes = serverSocket.ReceiveFrom(buffer, ref clientEP);
+                string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+                Console.WriteLine($"[Server] Received: {receivedMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[Server] Error: " + ex.Message);
+        }
+    }
+}
+
+
+
+        
 
 
 
@@ -75,8 +110,3 @@ class ServerUDP
 
 
         // TODO:[If no further requests receieved send End to the client]
-
-    }
-
-
-}
