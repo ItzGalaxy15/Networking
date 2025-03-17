@@ -134,3 +134,8 @@ dist
 *.cs
 *.cache
 *.editorconfig
+AssignmentTemplateStudent/client/bin/Debug/net8.0/client.pdb
+AssignmentTemplateStudent/client/bin/Debug/net8.0/client.pdb
+AssignmentTemplateStudent/client/bin/Debug/net8.0/client.exe
+AssignmentTemplateStudent/client/bin/Debug/net8.0/client.dll
+AssignmentTemplateStudent/client/obj/Debug/net8.0/client.dll

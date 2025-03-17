@@ -72,9 +72,11 @@ public class ServerUDP
                 Console.WriteLine($"[Server] Received: {receivedMessage}");
 
             // TODO:[Receive and print Hello]
-                receivedBytes = serverSocket.ReceiveFrom(buffer, ref clientEP);
-                receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-                Console.WriteLine($"[Server] Receive and print: {receivedMessage}");
+                Message? MessageReceived = JsonSerializer.Deserialize<Message>(receivedMessage);
+                if (MessageReceived != null && MessageReceived.MsgType == MessageType.Hello)
+                {
+                    Console.WriteLine("Hello received from Client");
+                }
 
 
             // TODO:[Send Welcome to the client]

@@ -73,13 +73,12 @@ class ClientUDP
             Console.WriteLine("[Client] Sending HELLO message...");
             
             var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Hello from client" };
-            byte[] helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
-            clientSocket.SendTo(helloBytes, serverEndPoint);
+            // byte[] helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
 
-            Console.WriteLine("[Client] Sending HELLO message STRING...");
-            string helloMessageString = "Hello";
-            helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessageString));
-            clientSocket.SendTo(helloBytes, serverEndPoint);
+            string helloMessageJson = JsonSerializer.Serialize(helloMessage);
+            byte[] helloMessageBytes = Encoding.ASCII.GetBytes(helloMessageJson);
+
+            clientSocket.SendTo(helloMessageBytes, serverEndPoint);
 
             //TODO: [Receive and print Welcome from server]
             byte[] buffer = new byte[1024];
