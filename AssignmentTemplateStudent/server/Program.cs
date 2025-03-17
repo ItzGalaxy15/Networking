@@ -60,15 +60,24 @@ public class ServerUDP
             serverSocket.Bind(serverEndPoint);
             Console.WriteLine($"[Server] Listening on {setting.ServerIPAddress}:{setting.ServerPortNumber}");
 
+
             byte[] buffer = new byte[1024];
             EndPoint clientEP = new IPEndPoint(IPAddress.Any, 0);
 
+            // TODO:[Receive and print a received Message from the client
             while (true)
             {
                 int receivedBytes = serverSocket.ReceiveFrom(buffer, ref clientEP);
                 string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
                 Console.WriteLine($"[Server] Received: {receivedMessage}");
 
+            // TODO:[Receive and print Hello]
+                receivedBytes = serverSocket.ReceiveFrom(buffer, ref clientEP);
+                receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+                Console.WriteLine($"[Server] Receive and print: {receivedMessage}");
+
+
+            // TODO:[Send Welcome to the client]
                 Console.WriteLine("[Server] Sending WELCOME message...");
             
                 var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Welcome from server" };
@@ -82,23 +91,6 @@ public class ServerUDP
         }
     }
 }
-
-
-
-        
-
-
-
-        // TODO:[Receive and print a received Message from the client]
-
-
-
-
-        // TODO:[Receive and print Hello]
-
-
-
-        // TODO:[Send Welcome to the client]
 
 
         // TODO:[Receive and print DNSLookup]

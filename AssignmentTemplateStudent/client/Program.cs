@@ -68,13 +68,20 @@ class ClientUDP
             clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             clientSocket.Bind(clientEndPoint);
             
+            //TODO: [Create and send HELLO]
             serverEndPoint = new IPEndPoint(IPAddress.Parse(setting.ServerIPAddress), setting.ServerPortNumber);
             Console.WriteLine("[Client] Sending HELLO message...");
             
             var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Hello from client" };
             byte[] helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
             clientSocket.SendTo(helloBytes, serverEndPoint);
-            
+
+            Console.WriteLine("[Client] Sending HELLO message STRING...");
+            string helloMessageString = "Hello";
+            helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessageString));
+            clientSocket.SendTo(helloBytes, serverEndPoint);
+
+            //TODO: [Receive and print Welcome from server]
             byte[] buffer = new byte[1024];
             EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0); // accepteert berichten van elk IP-adres
             int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP); // Ontvangt het bericht en slaat het op in buffer. Schrijft het IP-adres en poort van de afzender in remoteEP.
@@ -91,9 +98,6 @@ class ClientUDP
         
 
 
-        //TODO: [Create and send HELLO]
-
-        //TODO: [Receive and print Welcome from server]
 
         // TODO: [Create and send DNSLookup Message]
 
