@@ -49,7 +49,7 @@ public class ServerUDP
         try
         {
             LoadSettings();
-            if (setting == null || setting.ServerIPAddress == null)
+            if (setting == null || string.IsNullOrEmpty(setting.ServerIPAddress) || string.IsNullOrEmpty(setting.ClientIPAddress))
             {
                 Console.WriteLine("Invalid configuration file.");
                 return;

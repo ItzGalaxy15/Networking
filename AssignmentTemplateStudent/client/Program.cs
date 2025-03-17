@@ -58,18 +58,17 @@ class ClientUDP
         {
             LoadSettings();
             
-            if (setting == null || setting.ServerIPAddress == null || setting.ClientIPAddress == null)
+            if (setting == null || string.IsNullOrEmpty(setting.ServerIPAddress) || string.IsNullOrEmpty(setting.ClientIPAddress))
             {
                 Console.WriteLine("[Client] Invalid settings, exiting.");
                 return;
             }
             
-            IPEndPoint clientEndPoint = new(IPAddress.Any, setting.ClientPortNumber);
-            serverEndPoint = new IPEndPoint(IPAddress.Parse(setting.ServerIPAddress), setting.ServerPortNumber);
-            
+            IPEndPoint clientEndPoint = new(IPAddress.Any, setting.ClientPortNumber); // De client luistert nu op alle beschikbare netwerkinterfaces.
             clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             clientSocket.Bind(clientEndPoint);
             
+            serverEndPoint = new IPEndPoint(IPAddress.Parse(setting.ServerIPAddress), setting.ServerPortNumber);
             Console.WriteLine("[Client] Sending HELLO message...");
             
             var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Hello from client" };
@@ -77,8 +76,8 @@ class ClientUDP
             clientSocket.SendTo(helloBytes, serverEndPoint);
             
             byte[] buffer = new byte[1024];
-            EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
-            int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
+            EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0); // accepteert berichten van elk IP-adres
+            int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP); // Ontvangt het bericht en slaat het op in buffer. Schrijft het IP-adres en poort van de afzender in remoteEP.
             string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
             Console.WriteLine("[Client] Received: " + receivedMessage);
             
