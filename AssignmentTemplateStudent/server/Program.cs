@@ -71,12 +71,6 @@ public class ServerUDP
                 string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
                 Console.WriteLine($"[Server] Received: {receivedMessage}");
 
-            // TODO:[Receive and print Hello]
-                Message? MessageReceived = JsonSerializer.Deserialize<Message>(receivedMessage);
-                if (MessageReceived != null && MessageReceived.MsgType == MessageType.Hello)
-                {
-                    Console.WriteLine("Hello received from Client");
-                }
 
 
             // TODO:[Send Welcome to the client]
@@ -84,6 +78,8 @@ public class ServerUDP
             
                 var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Welcome from server" };
                 byte[] helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
+            // TODO:[Receive and print Hello]
+                Console.WriteLine("[Server] Sent: " + "'" + helloMessage.Content + "' to Client");
                 serverSocket.SendTo(helloBytes, clientEP);
             }
         }
