@@ -78,9 +78,15 @@ public class ServerUDP
             
                 var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Welcome from server" };
                 byte[] helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
-            // TODO:[Receive and print Hello]
                 Console.WriteLine("[Server] Sent: " + "'" + helloMessage.Content + "' to Client");
                 serverSocket.SendTo(helloBytes, clientEP);
+
+            // TODO:[Receive and print Hello]
+                Message receivedMessageObject = JsonSerializer.Deserialize<Message>(receivedMessage)!;
+                if (receivedMessageObject != null)
+                {
+                    Console.WriteLine("[Server] Received:" + receivedMessageObject.Content);
+                }
             }
         }
         catch (Exception ex)
