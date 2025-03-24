@@ -87,13 +87,12 @@ class ClientUDP
 
 
 
-
         // RECEIVING
 
         //TODO: [Receive and print Welcome from server]
             byte[] buffer = new byte[1024];
             EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0); // accepteert berichten van elk IP-adres
-            int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP); // Ontvangt het bericht en slaat het op in buffer. Schrijft het IP-adres en poort van de afzender in remoteEP.
+            int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP); // Ontvangt het bericht en slaat het op in buffer.
             string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
             Console.WriteLine("[Client] Received: " + receivedMessage);            
 
@@ -102,6 +101,12 @@ class ClientUDP
             string dnsLookupReply = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
             Console.WriteLine("[Client] Received DNSLookupReply: " + dnsLookupReply);
 
+        //TODO: [Send Acknowledgment to Server]
+
+        // TODO: [Send next DNSLookup to server]
+        // repeat the process until all DNSLoopkups (correct and incorrect onces) are sent to server and the replies with DNSLookupReply
+
+        //TODO: [Receive and print End from server]
             clientSocket.Close();
         }
         catch (Exception ex)
@@ -110,12 +115,6 @@ class ClientUDP
         }
 
 
-        //TODO: [Send Acknowledgment to Server]
-
-        // TODO: [Send next DNSLookup to server]
-        // repeat the process until all DNSLoopkups (correct and incorrect onces) are sent to server and the replies with DNSLookupReply
-
-        //TODO: [Receive and print End from server]
 
 
 

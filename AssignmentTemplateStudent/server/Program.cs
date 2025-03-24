@@ -72,6 +72,12 @@ public class ServerUDP
                 string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
                 Console.WriteLine($"[Server] Received: {receivedMessage}");
 
+                // TODO:[Receive and print Hello]
+                    Message receivedMessageObject = JsonSerializer.Deserialize<Message>(receivedMessage)!;
+                    if (receivedMessageObject != null)
+                    {
+                        Console.WriteLine("[Server] Received: " + receivedMessageObject.Content);
+                    }
 
         // SENDING
             var message = JsonSerializer.Deserialize<Message>(receivedMessage);
@@ -85,12 +91,6 @@ public class ServerUDP
                     Console.WriteLine("[Server] Sent: " + "'" + helloMessage.Content + "' to Client");
                     serverSocket.SendTo(helloBytes, clientEP);
         
-                // TODO:[Receive and print Hello]
-                    Message receivedMessageObject = JsonSerializer.Deserialize<Message>(receivedMessage)!;
-                    if (receivedMessageObject != null)
-                    {
-                        Console.WriteLine("[Server] Received: " + receivedMessageObject.Content);
-                    }
                 }
 
     // TODO:[Receive and print DNSLookup]
@@ -116,6 +116,8 @@ public class ServerUDP
                     byte[] dnsReplyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsReplyMessage));
                     serverSocket.SendTo(dnsReplyBytes, clientEP);
                 }
+        // TODO:[Receive Ack about correct DNSLookupReply from the client]
+        // TODO:[If no further requests receieved send End to the client]
             }
         }
         catch (Exception ex)
@@ -125,12 +127,10 @@ public class ServerUDP
     }
 }
 
-        // TODO:[Receive Ack about correct DNSLookupReply from the client]
 
 
 
 
-        // TODO:[If no further requests receieved send End to the client]
 
 
 
