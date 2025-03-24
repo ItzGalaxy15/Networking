@@ -64,6 +64,7 @@ public class ServerUDP
             byte[] buffer = new byte[1024];
             EndPoint clientEP = new IPEndPoint(IPAddress.Any, 0);
 
+        //RECEIVING
             // TODO:[Receive and print a received Message from the client
             while (true)
             {
@@ -72,20 +73,43 @@ public class ServerUDP
                 Console.WriteLine($"[Server] Received: {receivedMessage}");
 
 
-
-            // TODO:[Send Welcome to the client]
-                Console.WriteLine("[Server] Sending WELCOME message...");
-            
-                var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Welcome from server" };
-                byte[] helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
-                Console.WriteLine("[Server] Sent: " + "'" + helloMessage.Content + "' to Client");
-                serverSocket.SendTo(helloBytes, clientEP);
-
-            // TODO:[Receive and print Hello]
-                Message receivedMessageObject = JsonSerializer.Deserialize<Message>(receivedMessage)!;
-                if (receivedMessageObject != null)
+        // SENDING
+            var message = JsonSerializer.Deserialize<Message>(receivedMessage);
+                if (message.MsgType == MessageType.Hello)
                 {
-                    Console.WriteLine("[Server] Received:" + receivedMessageObject.Content);
+                // TODO:[Send Welcome to the client]
+                    Console.WriteLine("[Server] Sending WELCOME message...");
+                
+                    var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Welcome from server" };
+                    byte[] helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
+        
+                // TODO:[Receive and print Hello]
+                    Console.WriteLine("[Server] Sent: " + "'" + helloMessage.Content + "' to Client");
+                    serverSocket.SendTo(helloBytes, clientEP);
+                }
+
+    // TODO:[Receive and print DNSLookup]
+                else if(message.MsgType == MessageType.DNSLookup)
+                {
+        // TODO:[Query the DNSRecord in Json file]
+                    var dnsLookup = JsonSerializer.Deserialize<DNSRecord>(message.Content.ToString());
+                    var dnsRecords = JsonSerializer.Deserialize<List<DNSRecord>>(File.ReadAllText(@"DNSrecords.json"));
+
+                    var dnsRecord = dnsRecords.FirstOrDefault(record => record.Type == dnsLookup.Type && record.Name == dnsLookup.Name);
+                    Message dnsReplyMessage;
+                    if (dnsRecord != null)
+                    {
+                        dnsReplyMessage = new Message { MsgId = 2, MsgType = MessageType.DNSLookupReply, Content = dnsRecord };
+                    }
+        // TODO:[If not found Send Error]
+                    else
+                    {
+                        dnsReplyMessage = new Message { MsgId = 2, MsgType = MessageType.Error, Content = "DNS record not found" };
+                    }
+
+        // TODO:[If found Send DNSLookupReply containing the DNSRecord]
+                    byte[] dnsReplyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsReplyMessage));
+                    serverSocket.SendTo(dnsReplyBytes, clientEP);
                 }
             }
         }
@@ -96,20 +120,15 @@ public class ServerUDP
     }
 }
 
-
-        // TODO:[Receive and print DNSLookup]
-
-
-        // TODO:[Query the DNSRecord in Json file]
-
-        // TODO:[If found Send DNSLookupReply containing the DNSRecord]
-
-
-
-        // TODO:[If not found Send Error]
-
-
         // TODO:[Receive Ack about correct DNSLookupReply from the client]
 
 
+
+
         // TODO:[If no further requests receieved send End to the client]
+
+
+
+
+
+
