@@ -134,5 +134,5 @@ dist
 *.cs
 *.cache
 *.editorconfig
-*/bin
-*/obj
+bin/
+obj/
