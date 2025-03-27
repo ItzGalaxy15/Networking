@@ -59,9 +59,22 @@ class ClientUDP
                 return;
             }
 
-            IPEndPoint clientEndPoint = new(IPAddress.Any, setting.ClientPortNumber);
-            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            clientSocket.Connect(clientEndPoint);
+            IPEndPoint clientEndPoint;
+            try
+            {
+                clientEndPoint = new IPEndPoint(IPAddress.Any, setting.ClientPortNumber);
+                clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                clientSocket.Connect(clientEndPoint);
+                // Console.WriteLine($"[Client] Bound to port {setting.ClientPortNumber}");
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine($"[Client] Port {setting.ClientPortNumber} is already in use. Binding to a random available port.");
+                clientEndPoint = new IPEndPoint(IPAddress.Any, 0);
+                clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                clientSocket.Bind(clientEndPoint);
+                Console.WriteLine($"[Client] Bound to random port {((IPEndPoint)clientSocket.LocalEndPoint!).Port}");
+            }
 
             serverEndPoint = new IPEndPoint(IPAddress.Parse(setting.ServerIPAddress), setting.ServerPortNumber);
 

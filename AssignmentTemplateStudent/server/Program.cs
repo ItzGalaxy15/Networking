@@ -53,10 +53,22 @@ public class ServerUDP
                 Console.WriteLine("Invalid configuration file.");
                 return;
             }
-
-            serverEndpoint = new IPEndPoint(IPAddress.Any, setting.ServerPortNumber);
-            serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            serverSocket.Connect(serverEndpoint);
+            IPEndPoint serverEndPoint;
+            try
+            {
+                serverEndpoint = new IPEndPoint(IPAddress.Any, setting.ServerPortNumber);
+                serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                serverSocket.Connect(serverEndpoint);
+                // Console.WriteLine($"[Client] Bound to port {setting.ClientPortNumber}");
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine($"[Client] Port {setting.ClientPortNumber} is already in use. Binding to a random available port.");
+                serverEndPoint = new IPEndPoint(IPAddress.Any, 0);
+                serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                serverSocket.Connect(serverEndPoint);
+                Console.WriteLine($"[Client] Bound to random port {((IPEndPoint)serverSocket.LocalEndPoint!).Port}");
+            }
             Console.WriteLine($"[Server] Listening on {setting.ServerIPAddress}:{setting.ServerPortNumber}");
 
             byte[] buffer = new byte[1024];
