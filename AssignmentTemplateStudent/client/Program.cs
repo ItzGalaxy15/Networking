@@ -133,6 +133,17 @@ class ClientUDP
             }
             msgId++;
         }
+
+        // Send End message to server
+        var endMessage = new Message { MsgId = 0, MsgType = MessageType.End, Content = "No more requests" };
+        byte[] endBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(endMessage));
+        clientSocket.SendTo(endBytes, serverEndPoint);
+
+        // Receive End message from server
+        receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
+        string endMessageFromServer = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+        Console.WriteLine("\n[Client] Received End message: " + endMessageFromServer);
+
         clientSocket.Close();
             
         }

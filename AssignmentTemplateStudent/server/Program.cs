@@ -129,8 +129,10 @@ public class ServerUDP
             // TODO: [If no further requests received send End to the client]
                 else if (message.MsgType == MessageType.End)
                 {
-                    // End message received, no more requests
-                    Console.WriteLine("\n[Server] Client has no more requests.");
+                    Console.WriteLine("[Server] Sending End message...");
+                    var endMessage = new Message { MsgId = 0, MsgType = MessageType.End, Content = "No more requests" };
+                    byte[] endBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(endMessage));
+                    serverSocket.SendTo(endBytes, clientEP);
                 }
             }
         }
