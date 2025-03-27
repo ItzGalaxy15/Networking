@@ -109,7 +109,7 @@ class ClientUDP
             byte[] dnsLookupBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsLookupMessage));
             clientSocket.SendTo(dnsLookupBytes, serverEndPoint);
 
-            // Receive and print DNSLookupReply from server
+            //TODO: [Receive and print DNSLookupReply from server]
             receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
             string dnsLookupReply = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
             Console.WriteLine("\n[Client] Received DNSLookupReply: " + dnsLookupReply);
@@ -117,7 +117,7 @@ class ClientUDP
             var dnsReplyMessage = JsonSerializer.Deserialize<Message>(dnsLookupReply);
             if (dnsReplyMessage != null && dnsReplyMessage.MsgType == MessageType.DNSLookupReply)
             {
-                // Send Acknowledgment to Server
+                //TODO: [Send Acknowledgment to Server]
                 Console.WriteLine("[Client] Sending Ack for MsgId: " + dnsReplyMessage.MsgId);
                 var ackMessage = new Message { MsgId = dnsReplyMessage.MsgId, MsgType = MessageType.Ack, Content = dnsReplyMessage.MsgId };
                 byte[] ackBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(ackMessage));
