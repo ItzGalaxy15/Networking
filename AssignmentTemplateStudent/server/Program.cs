@@ -88,7 +88,7 @@ public class ServerUDP
                 
                     var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Welcome from server" };
                     byte[] helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
-                    Console.WriteLine("[Server] Sent: " + "'" + helloMessage.Content + "' to Client");
+                    Console.WriteLine("[Server] Sent: " + "'" + helloMessage.Content + "' to Client\n");
                     serverSocket.SendTo(helloBytes, clientEP);
         
                 }
@@ -122,7 +122,7 @@ public class ServerUDP
 
                     if (ack != null && ack.MsgType == MessageType.Ack)
                     {
-                        Console.WriteLine("[Server] Received Ack for MsgId: " + ack.Content);
+                        Console.WriteLine("[Server] Received Ack for MsgId: " + ack.MsgId + "\n");
                     }
                 }
 
@@ -130,7 +130,7 @@ public class ServerUDP
                 else if (message.MsgType == MessageType.End)
                 {
                     // End message received, no more requests
-                    Console.WriteLine("[Server] Client has no more requests.");
+                    Console.WriteLine("\n[Server] Client has no more requests.");
                 }
             }
         }

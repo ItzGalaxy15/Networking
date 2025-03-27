@@ -102,16 +102,17 @@ class ClientUDP
 
         // TODO: [Send next DNSLookup to server]
         // repeat the process until all DNSLoopkups (correct and incorrect onces) are sent to server and the replies with DNSLookupReply
+        int msgId = 2;
         foreach (var dnsLookup in dnsLookups)
         {
-            var dnsLookupMessage = new Message { MsgId = 3, MsgType = MessageType.DNSLookup, Content = dnsLookup };
+            var dnsLookupMessage = new Message { MsgId = msgId, MsgType = MessageType.DNSLookup, Content = dnsLookup };
             byte[] dnsLookupBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsLookupMessage));
             clientSocket.SendTo(dnsLookupBytes, serverEndPoint);
 
             // Receive and print DNSLookupReply from server
             receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
             string dnsLookupReply = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-            Console.WriteLine("[Client] Received DNSLookupReply: " + dnsLookupReply);
+            Console.WriteLine("\n[Client] Received DNSLookupReply: " + dnsLookupReply);
 
             var dnsReplyMessage = JsonSerializer.Deserialize<Message>(dnsLookupReply);
             if (dnsReplyMessage != null && dnsReplyMessage.MsgType == MessageType.DNSLookupReply)
@@ -130,6 +131,7 @@ class ClientUDP
                 byte[] ackBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(ackMessage));
                 clientSocket.SendTo(ackBytes, serverEndPoint);
             }
+            msgId++;
         }
         clientSocket.Close();
             
