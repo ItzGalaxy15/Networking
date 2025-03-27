@@ -61,7 +61,7 @@ class ClientUDP
 
             IPEndPoint clientEndPoint = new(IPAddress.Any, setting.ClientPortNumber);
             clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            clientSocket.Bind(clientEndPoint);
+            clientSocket.Connect(clientEndPoint);
 
             serverEndPoint = new IPEndPoint(IPAddress.Parse(setting.ServerIPAddress), setting.ServerPortNumber);
 

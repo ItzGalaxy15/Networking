@@ -56,7 +56,7 @@ public class ServerUDP
 
             serverEndpoint = new IPEndPoint(IPAddress.Any, setting.ServerPortNumber);
             serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            serverSocket.Bind(serverEndpoint);
+            serverSocket.Connect(serverEndpoint);
             Console.WriteLine($"[Server] Listening on {setting.ServerIPAddress}:{setting.ServerPortNumber}");
 
             byte[] buffer = new byte[1024];
