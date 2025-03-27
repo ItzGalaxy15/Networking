@@ -58,12 +58,14 @@ class ClientUDP
             LoadSettings();
             
 
-            // SENDING
+            
             if (setting == null || string.IsNullOrEmpty(setting.ServerIPAddress) || string.IsNullOrEmpty(setting.ClientIPAddress))
             {
                 Console.WriteLine("[Client] Invalid settings, exiting.");
                 return;
             }
+
+    //HELLO
             
         //TODO: [Create endpoints and socket]
             IPEndPoint clientEndPoint = new(IPAddress.Any, setting.ClientPortNumber); // De client luistert nu op alle beschikbare netwerkinterfaces.
@@ -79,35 +81,58 @@ class ClientUDP
             byte[] helloMessageBytes = Encoding.ASCII.GetBytes(helloMessageJson);
             clientSocket.SendTo(helloMessageBytes, serverEndPoint);
 
-        // TODO: [Create and send DNSLookup Message]
-            var dnsLookupMessage = new Message { MsgId = 2, MsgType = MessageType.DNSLookup, Content = new DNSRecord { Type = "A", Name = "www.test.com" } };
-            byte[] dnsLookupBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsLookupMessage));
-            clientSocket.SendTo(dnsLookupBytes, serverEndPoint);
-
-
-
-
-        // RECEIVING
-
         //TODO: [Receive and print Welcome from server]
             byte[] buffer = new byte[1024];
             EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0); // accepteert berichten van elk IP-adres
             int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP); // Ontvangt het bericht en slaat het op in buffer.
             string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-            Console.WriteLine("[Client] Received: " + receivedMessage);            
+            Console.WriteLine("[Client] Received: " + receivedMessage);      
 
-        // TODO: [Receive and print DNSLookupReply from server]
+
+    //DNS LOOKUP      
+
+        // TODO: [Send next DNSLookup to server]
+        var dnsLookups = new List<DNSRecord>
+        {
+            new DNSRecord { Type = "A", Name = "www.outlook.com" }, // Correct
+            new DNSRecord { Type = "MX", Name = "example.com" }, // Correct
+            new DNSRecord { Type = "A", Name = "www.nonexistent.com" }, // Incorrect
+            new DNSRecord { Type = "M", Name = "exampl.com" } // Incorrect
+        };
+
+        // TODO: [Send next DNSLookup to server]
+        // repeat the process until all DNSLoopkups (correct and incorrect onces) are sent to server and the replies with DNSLookupReply
+        foreach (var dnsLookup in dnsLookups)
+        {
+            var dnsLookupMessage = new Message { MsgId = 3, MsgType = MessageType.DNSLookup, Content = dnsLookup };
+            byte[] dnsLookupBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsLookupMessage));
+            clientSocket.SendTo(dnsLookupBytes, serverEndPoint);
+
+            // Receive and print DNSLookupReply from server
             receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
             string dnsLookupReply = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
             Console.WriteLine("[Client] Received DNSLookupReply: " + dnsLookupReply);
 
-        //TODO: [Send Acknowledgment to Server]
-
-        // TODO: [Send next DNSLookup to server]
-        // repeat the process until all DNSLoopkups (correct and incorrect onces) are sent to server and the replies with DNSLookupReply
-
-        //TODO: [Receive and print End from server]
-            clientSocket.Close();
+            var dnsReplyMessage = JsonSerializer.Deserialize<Message>(dnsLookupReply);
+            if (dnsReplyMessage != null && dnsReplyMessage.MsgType == MessageType.DNSLookupReply)
+            {
+                // Send Acknowledgment to Server
+                Console.WriteLine("[Client] Sending Ack for MsgId: " + dnsReplyMessage.MsgId);
+                var ackMessage = new Message { MsgId = dnsReplyMessage.MsgId, MsgType = MessageType.Ack, Content = dnsReplyMessage.MsgId };
+                byte[] ackBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(ackMessage));
+                clientSocket.SendTo(ackBytes, serverEndPoint);
+            }
+            else if (dnsReplyMessage != null && dnsReplyMessage.MsgType == MessageType.Error)
+            {
+                // Handle Error response and continue
+                Console.WriteLine("[Client] Error received: " + dnsReplyMessage.Content);
+                var ackMessage = new Message { MsgId = dnsReplyMessage.MsgId, MsgType = MessageType.Ack, Content = dnsReplyMessage.MsgId };
+                byte[] ackBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(ackMessage));
+                clientSocket.SendTo(ackBytes, serverEndPoint);
+            }
+        }
+        clientSocket.Close();
+            
         }
         catch (Exception ex)
         {

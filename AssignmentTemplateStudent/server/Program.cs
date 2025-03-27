@@ -80,7 +80,7 @@ public class ServerUDP
                     }
 
         // SENDING
-            var message = JsonSerializer.Deserialize<Message>(receivedMessage);
+                var message = JsonSerializer.Deserialize<Message>(receivedMessage);
                 if (message.MsgType == MessageType.Hello)
                 {
                 // TODO:[Send Welcome to the client]
@@ -97,27 +97,41 @@ public class ServerUDP
                 else if(message.MsgType == MessageType.DNSLookup)
                 {
         // TODO:[Query the DNSRecord in Json file]
-                    var dnsLookup = JsonSerializer.Deserialize<DNSRecord>(message.Content.ToString());
-                    var dnsRecords = JsonSerializer.Deserialize<List<DNSRecord>>(File.ReadAllText(@"DNSrecords.json"));
+                var dnsLookup = JsonSerializer.Deserialize<DNSRecord>(message.Content.ToString());
+                var dnsRecords = JsonSerializer.Deserialize<List<DNSRecord>>(File.ReadAllText(@"DNSrecords.json"));
 
-                    var dnsRecord = dnsRecords.FirstOrDefault(record => record.Type == dnsLookup.Type && record.Name == dnsLookup.Name);
-                    Message dnsReplyMessage;
-                    if (dnsRecord != null)
-                    {
-                        dnsReplyMessage = new Message { MsgId = 2, MsgType = MessageType.DNSLookupReply, Content = dnsRecord };
-                    }
-        // TODO:[If not found Send Error]
-                    else
-                    {
-                        dnsReplyMessage = new Message { MsgId = 2, MsgType = MessageType.Error, Content = "DNS record not found" };
-                    }
+                var dnsRecord = dnsRecords.FirstOrDefault(record => record.Type == dnsLookup.Type && record.Name == dnsLookup.Name);
+                Message dnsReplyMessage;
+                if (dnsRecord != null)
+                {
+                    dnsReplyMessage = new Message { MsgId = message.MsgId, MsgType = MessageType.DNSLookupReply, Content = dnsRecord };
+                }
+                else
+                {
+                    dnsReplyMessage = new Message { MsgId = message.MsgId, MsgType = MessageType.Error, Content = "DNS record not found" };
+                }
 
         // TODO:[If found Send DNSLookupReply containing the DNSRecord]
                     byte[] dnsReplyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsReplyMessage));
                     serverSocket.SendTo(dnsReplyBytes, clientEP);
+
+                    // TODO: [Receive Ack about correct DNSLookupReply from the client]
+                    receivedBytes = serverSocket.ReceiveFrom(buffer, ref clientEP);
+                    string ackMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+                    var ack = JsonSerializer.Deserialize<Message>(ackMessage);
+
+                    if (ack != null && ack.MsgType == MessageType.Ack)
+                    {
+                        Console.WriteLine("[Server] Received Ack for MsgId: " + ack.Content);
+                    }
                 }
-        // TODO:[Receive Ack about correct DNSLookupReply from the client]
-        // TODO:[If no further requests receieved send End to the client]
+
+            // TODO: [If no further requests received send End to the client]
+                else if (message.MsgType == MessageType.End)
+                {
+                    // End message received, no more requests
+                    Console.WriteLine("[Server] Client has no more requests.");
+                }
             }
         }
         catch (Exception ex)
