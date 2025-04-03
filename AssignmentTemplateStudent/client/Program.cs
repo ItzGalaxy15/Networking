@@ -58,7 +58,7 @@ class ClientUDP
                 Console.WriteLine("[Client] Invalid settings, exiting.");
                 return;
             }
-
+        //TODO: [Create endpoints and socket]
             IPEndPoint clientEndPoint;
             try
             {
@@ -78,7 +78,7 @@ class ClientUDP
 
             serverEndPoint = new IPEndPoint(IPAddress.Parse(setting.ServerIPAddress), setting.ServerPortNumber);
 
-            SendHello();
+            SendHello();  //TODO: [Create and send HELLO]
             PerformDNSLookups();
 
             // Wait for End message from server
@@ -89,6 +89,7 @@ class ClientUDP
             string endMessageFromServer = Encoding.UTF8.GetString(endBuffer, 0, receivedBytes);
             var endMessage = JsonSerializer.Deserialize<Message>(endMessageFromServer);
 
+        //TODO: [Receive and print End from server]
             if (endMessage != null && endMessage.MsgType == MessageType.End)
             {
                 Console.WriteLine("\n[Client] Received End message: " + endMessage.Content);
@@ -114,6 +115,7 @@ class ClientUDP
     {
         try
         {
+        //TODO: [Create and send HELLO]
             Console.WriteLine("[Client] Sending HELLO message...");
             var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Hello from client" };
             byte[] helloMessageBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
@@ -124,7 +126,7 @@ class ClientUDP
             int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
             string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
             var welcomeMessage = JsonSerializer.Deserialize<Message>(receivedMessage);
-
+        //TODO: [Receive and print Welcome from server]
             if (welcomeMessage != null && welcomeMessage.MsgType == MessageType.Welcome)
             {
                 Console.WriteLine("[Client] Received: " + receivedMessage);
@@ -144,6 +146,7 @@ class ClientUDP
 
     private static void PerformDNSLookups()
     {
+        // repeat the process until all DNSLoopkups (correct and incorrect onces) are sent to server and the replies with DNSLookupReply
         try
         {
             var dnsLookups = new List<DNSRecord>
@@ -157,11 +160,13 @@ class ClientUDP
             int msgId = 33;  // Starting with the sample message ID
             foreach (var dnsLookup in dnsLookups)
             {
+        // TODO: [Create and send DNSLookup Message]
                 var dnsLookupMessage = new Message { MsgId = msgId, MsgType = MessageType.DNSLookup, Content = dnsLookup };
                 byte[] dnsLookupBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsLookupMessage));
                 Console.WriteLine("\n[Client] Sending DNSLookup: " + JsonSerializer.Serialize(dnsLookupMessage));
                 clientSocket.SendTo(dnsLookupBytes, serverEndPoint);
 
+        //TODO: [Receive and print DNSLookupReply from server]
                 byte[] buffer = new byte[1024];
                 EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
                 int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
@@ -175,6 +180,7 @@ class ClientUDP
                     continue;
                 }
 
+        //TODO: [Send Acknowledgment to Server]
                 if (dnsReplyMessage.MsgType == MessageType.DNSLookupReply)
                 {
                     Console.WriteLine("[Client] Sending Ack for MsgId: " + dnsReplyMessage.MsgId);
@@ -194,7 +200,7 @@ class ClientUDP
                     Console.WriteLine($"[Client] Error: Unexpected message type received: {dnsReplyMessage.MsgType}");
                     continue;
                 }
-
+        // TODO: [Send next DNSLookup to server]
                 msgId++;
             }
         }
@@ -205,3 +211,13 @@ class ClientUDP
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
