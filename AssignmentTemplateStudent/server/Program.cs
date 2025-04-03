@@ -61,6 +61,7 @@ public class ServerUDP
                 serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 serverSocket.Bind(serverEndpoint);
                 Console.WriteLine($"[Server] Bound to port {setting.ServerPortNumber}");
+                Console.WriteLine($"[Server] Listening on {setting.ServerIPAddress}:{setting.ServerPortNumber}");
             }
             catch (SocketException ex)
             {
@@ -69,8 +70,9 @@ public class ServerUDP
                 serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 serverSocket.Bind(serverEndpoint);
                 Console.WriteLine($"[Server] Bound to random port {((IPEndPoint)serverSocket.LocalEndPoint!).Port}");
+                Console.WriteLine($"[Server] Listening on {setting.ServerIPAddress}:{((IPEndPoint)serverSocket.LocalEndPoint!).Port}");
             }
-            Console.WriteLine($"[Server] Listening on {setting.ServerIPAddress}:{setting.ServerPortNumber}");
+            
 
             // TODO:[Receive and print a received Message from the client]
             byte[] buffer = new byte[1024];
