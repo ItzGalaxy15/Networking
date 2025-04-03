@@ -64,8 +64,8 @@ class ClientUDP
             {
                 clientEndPoint = new IPEndPoint(IPAddress.Any, setting.ClientPortNumber);
                 clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                clientSocket.Connect(clientEndPoint);
-                // Console.WriteLine($"[Client] Bound to port {setting.ClientPortNumber}");
+                clientSocket.Bind(clientEndPoint);
+                Console.WriteLine($"[Client] Bound to port {setting.ClientPortNumber}");
             }
             catch (SocketException ex)
             {
@@ -81,80 +81,126 @@ class ClientUDP
             SendHello();
             PerformDNSLookups();
 
-            // Send End message to server
-            var endMessage = new Message { MsgId = 0, MsgType = MessageType.End, Content = "No more requests" };
-            byte[] endBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(endMessage));
-            clientSocket.SendTo(endBytes, serverEndPoint);
-
-            // Receive End message from server
-            byte[] buffer = new byte[1024];
+            // Wait for End message from server
+            Console.WriteLine("[Client] Waiting for End message from server...");
+            byte[] endBuffer = new byte[1024];
             EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
-            int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
-            string endMessageFromServer = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-            Console.WriteLine("\n[Client] Received End message: " + endMessageFromServer);
+            int receivedBytes = clientSocket.ReceiveFrom(endBuffer, ref remoteEP);
+            string endMessageFromServer = Encoding.UTF8.GetString(endBuffer, 0, receivedBytes);
+            var endMessage = JsonSerializer.Deserialize<Message>(endMessageFromServer);
 
-            clientSocket.Close();
+            if (endMessage != null && endMessage.MsgType == MessageType.End)
+            {
+                Console.WriteLine("\n[Client] Received End message: " + endMessage.Content);
+                Console.WriteLine("[Client] Terminating client...");
+                clientSocket.Close();
+            }
+            else
+            {
+                Console.WriteLine("[Client] Error: Received unexpected message type while waiting for End message");
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine("[Client] Error: " + ex.Message);
+            if (clientSocket != null)
+            {
+                clientSocket.Close();
+            }
         }
     }
 
     private static void SendHello()
     {
-        Console.WriteLine("[Client] Sending HELLO message...");
-        var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Hello from client" };
-        byte[] helloMessageBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
-        clientSocket.SendTo(helloMessageBytes, serverEndPoint);
-
-        byte[] buffer = new byte[1024];
-        EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
-        int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
-        string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-        Console.WriteLine("[Client] Received: " + receivedMessage);
-    }
-
-    private static void PerformDNSLookups()
-    {
-        var dnsLookups = new List<DNSRecord>
+        try
         {
-            new DNSRecord { Type = "A", Name = "www.outlook.com" },
-            new DNSRecord { Type = "MX", Name = "example.com" },
-            new DNSRecord { Type = "A", Name = "www.nonexistent.com" },
-            new DNSRecord { Type = "M", Name = "exampl.com" }
-        };
-
-        int msgId = 2;
-        foreach (var dnsLookup in dnsLookups)
-        {
-            var dnsLookupMessage = new Message { MsgId = msgId, MsgType = MessageType.DNSLookup, Content = dnsLookup };
-            byte[] dnsLookupBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsLookupMessage));
-            clientSocket.SendTo(dnsLookupBytes, serverEndPoint);
+            Console.WriteLine("[Client] Sending HELLO message...");
+            var helloMessage = new Message { MsgId = 1, MsgType = MessageType.Hello, Content = "Hello from client" };
+            byte[] helloMessageBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
+            clientSocket.SendTo(helloMessageBytes, serverEndPoint);
 
             byte[] buffer = new byte[1024];
             EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
             int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
-            string dnsLookupReply = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-            Console.WriteLine("\n[Client] Received DNSLookupReply: " + dnsLookupReply);
+            string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+            var welcomeMessage = JsonSerializer.Deserialize<Message>(receivedMessage);
 
-            var dnsReplyMessage = JsonSerializer.Deserialize<Message>(dnsLookupReply);
-            if (dnsReplyMessage != null && dnsReplyMessage.MsgType == MessageType.DNSLookupReply)
+            if (welcomeMessage != null && welcomeMessage.MsgType == MessageType.Welcome)
             {
-                Console.WriteLine("[Client] Sending Ack for MsgId: " + dnsReplyMessage.MsgId);
-                var ackMessage = new Message { MsgId = dnsReplyMessage.MsgId, MsgType = MessageType.Ack, Content = dnsReplyMessage.MsgId };
-                byte[] ackBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(ackMessage));
-                clientSocket.SendTo(ackBytes, serverEndPoint);
+                Console.WriteLine("[Client] Received: " + receivedMessage);
             }
-            else if (dnsReplyMessage != null && dnsReplyMessage.MsgType == MessageType.Error)
+            else
             {
-                Console.WriteLine("[Client] Error received: " + dnsReplyMessage.Content);
-                var ackMessage = new Message { MsgId = dnsReplyMessage.MsgId, MsgType = MessageType.Ack, Content = dnsReplyMessage.MsgId };
-                byte[] ackBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(ackMessage));
-                clientSocket.SendTo(ackBytes, serverEndPoint);
+                Console.WriteLine("[Client] Error: Expected Welcome message but received different message type");
+                throw new Exception("Protocol error: Expected Welcome message");
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[Client] Error in SendHello: " + ex.Message);
+            throw;
+        }
+    }
 
-            msgId++;
+    private static void PerformDNSLookups()
+    {
+        try
+        {
+            var dnsLookups = new List<DNSRecord>
+            {
+                new DNSRecord { Type = "A", Name = "www.outlook.com" },
+                new DNSRecord { Type = "MX", Name = "example.com" },
+                new DNSRecord { Type = "A", Name = "www.nonexistent.com" },
+                new DNSRecord { Type = "M", Name = "exampl.com" }
+            };
+
+            int msgId = 33;  // Starting with the sample message ID
+            foreach (var dnsLookup in dnsLookups)
+            {
+                var dnsLookupMessage = new Message { MsgId = msgId, MsgType = MessageType.DNSLookup, Content = dnsLookup };
+                byte[] dnsLookupBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsLookupMessage));
+                clientSocket.SendTo(dnsLookupBytes, serverEndPoint);
+
+                byte[] buffer = new byte[1024];
+                EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
+                int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
+                string dnsLookupReply = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+                Console.WriteLine("\n[Client] Received DNSLookupReply: " + dnsLookupReply);
+
+                var dnsReplyMessage = JsonSerializer.Deserialize<Message>(dnsLookupReply);
+                if (dnsReplyMessage == null)
+                {
+                    Console.WriteLine("[Client] Error: Received invalid message format");
+                    continue;
+                }
+
+                if (dnsReplyMessage.MsgType == MessageType.DNSLookupReply)
+                {
+                    Console.WriteLine("[Client] Sending Ack for MsgId: " + dnsReplyMessage.MsgId);
+                    var ackMessage = new Message { MsgId = dnsReplyMessage.MsgId, MsgType = MessageType.Ack, Content = dnsReplyMessage.MsgId };
+                    byte[] ackBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(ackMessage));
+                    clientSocket.SendTo(ackBytes, serverEndPoint);
+                }
+                else if (dnsReplyMessage.MsgType == MessageType.Error)
+                {
+                    Console.WriteLine("[Client] Error received: " + dnsReplyMessage.Content);
+                    var ackMessage = new Message { MsgId = dnsReplyMessage.MsgId, MsgType = MessageType.Ack, Content = dnsReplyMessage.MsgId };
+                    byte[] ackBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(ackMessage));
+                    clientSocket.SendTo(ackBytes, serverEndPoint);
+                }
+                else
+                {
+                    Console.WriteLine($"[Client] Error: Unexpected message type received: {dnsReplyMessage.MsgType}");
+                    continue;
+                }
+
+                msgId++;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[Client] Error in PerformDNSLookups: " + ex.Message);
+            throw;
         }
     }
 }
