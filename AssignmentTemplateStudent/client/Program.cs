@@ -159,6 +159,7 @@ class ClientUDP
             {
                 var dnsLookupMessage = new Message { MsgId = msgId, MsgType = MessageType.DNSLookup, Content = dnsLookup };
                 byte[] dnsLookupBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsLookupMessage));
+                Console.WriteLine("\n[Client] Sending DNSLookup: " + JsonSerializer.Serialize(dnsLookupMessage));
                 clientSocket.SendTo(dnsLookupBytes, serverEndPoint);
 
                 byte[] buffer = new byte[1024];
