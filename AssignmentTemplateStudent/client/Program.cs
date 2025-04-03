@@ -39,7 +39,7 @@ class ClientUDP
         {
             string configContent = File.ReadAllText(configFile);
             setting = JsonSerializer.Deserialize<Setting>(configContent);
-            Console.WriteLine("[Client] Configuration loaded successfully.");
+
         }
         catch (Exception ex)
         {
@@ -58,7 +58,7 @@ class ClientUDP
                 Console.WriteLine("[Client] Invalid settings, exiting.");
                 return;
             }
-        //TODO: [Create endpoints and socket]
+            //TODO: [Create endpoints and socket]
             IPEndPoint clientEndPoint;
             try
             {
@@ -81,6 +81,7 @@ class ClientUDP
             SendHello();  //TODO: [Create and send HELLO]
             PerformDNSLookups();
 
+            //TODO: [Receive and print End from server]
             // Wait for End message from server
             Console.WriteLine("[Client] Waiting for End message from server...");
             byte[] endBuffer = new byte[1024];
@@ -89,7 +90,6 @@ class ClientUDP
             string endMessageFromServer = Encoding.UTF8.GetString(endBuffer, 0, receivedBytes);
             var endMessage = JsonSerializer.Deserialize<Message>(endMessageFromServer);
 
-        //TODO: [Receive and print End from server]
             if (endMessage != null && endMessage.MsgType == MessageType.End)
             {
                 Console.WriteLine("\n[Client] Received End message: " + endMessage.Content);
@@ -121,12 +121,12 @@ class ClientUDP
             byte[] helloMessageBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
             clientSocket.SendTo(helloMessageBytes, serverEndPoint);
 
+        //TODO: [Receive and print Welcome from server]
             byte[] buffer = new byte[1024];
             EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
             int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
             string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
             var welcomeMessage = JsonSerializer.Deserialize<Message>(receivedMessage);
-        //TODO: [Receive and print Welcome from server]
             if (welcomeMessage != null && welcomeMessage.MsgType == MessageType.Welcome)
             {
                 Console.WriteLine("[Client] Received: " + receivedMessage);
@@ -160,13 +160,13 @@ class ClientUDP
             int msgId = 33;  // Starting with the sample message ID
             foreach (var dnsLookup in dnsLookups)
             {
-        // TODO: [Create and send DNSLookup Message]
+                // TODO: [Create and send DNSLookup Message]
                 var dnsLookupMessage = new Message { MsgId = msgId, MsgType = MessageType.DNSLookup, Content = dnsLookup };
                 byte[] dnsLookupBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsLookupMessage));
                 Console.WriteLine("\n[Client] Sending DNSLookup: " + JsonSerializer.Serialize(dnsLookupMessage));
                 clientSocket.SendTo(dnsLookupBytes, serverEndPoint);
 
-        //TODO: [Receive and print DNSLookupReply from server]
+                //TODO: [Receive and print DNSLookupReply from server]
                 byte[] buffer = new byte[1024];
                 EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
                 int receivedBytes = clientSocket.ReceiveFrom(buffer, ref remoteEP);
@@ -180,7 +180,7 @@ class ClientUDP
                     continue;
                 }
 
-        //TODO: [Send Acknowledgment to Server]
+                //TODO: [Send Acknowledgment to Server]
                 if (dnsReplyMessage.MsgType == MessageType.DNSLookupReply)
                 {
                     Console.WriteLine("[Client] Sending Ack for MsgId: " + dnsReplyMessage.MsgId);
@@ -200,7 +200,7 @@ class ClientUDP
                     Console.WriteLine($"[Client] Error: Unexpected message type received: {dnsReplyMessage.MsgType}");
                     continue;
                 }
-        // TODO: [Send next DNSLookup to server]
+                // TODO: [Send next DNSLookup to server]
                 msgId++;
             }
         }

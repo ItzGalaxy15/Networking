@@ -53,7 +53,7 @@ public class ServerUDP
                 Console.WriteLine("Invalid configuration file.");
                 return;
             }
-        // TODO: [Create a socket and endpoints and bind it to the server IP address and port number]
+            // TODO: [Create a socket and endpoints and bind it to the server IP address and port number]
             IPEndPoint serverEndPoint;
             try
             {
@@ -72,6 +72,7 @@ public class ServerUDP
             }
             Console.WriteLine($"[Server] Listening on {setting.ServerIPAddress}:{setting.ServerPortNumber}");
 
+            // TODO:[Receive and print a received Message from the client]
             byte[] buffer = new byte[1024];
             EndPoint clientEP = new IPEndPoint(IPAddress.Any, 0);
 
@@ -81,7 +82,6 @@ public class ServerUDP
                 string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
                 Console.WriteLine($"[Server] Received: {receivedMessage}");
 
-        // TODO:[Receive and print a received Message from the client]
                 var message = JsonSerializer.Deserialize<Message>(receivedMessage);
                 if (message == null)
                 {
@@ -98,7 +98,7 @@ public class ServerUDP
                 {
                     HandleDNSLookup(message, clientEP);
                 }
-        // TODO:[If no further requests receieved send End to the client]
+                // TODO:[If no further requests receieved send End to the client]
                 else if (message.MsgType == MessageType.End)
                 {
                     HandleEnd(clientEP);
@@ -121,8 +121,8 @@ public class ServerUDP
         // TODO:[Receive and print Hello]
         Console.WriteLine("[Server] Sending WELCOME message...");
         // TODO:[Send Welcome to the client]
-        var helloMessage = new Message { MsgId = 4, MsgType = MessageType.Welcome, Content = "Welcome from server" };
-        byte[] helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
+        var welcomeMessage = new Message { MsgId = 4, MsgType = MessageType.Welcome, Content = "Welcome from server" };
+        byte[] helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(welcomeMessage));
         serverSocket.SendTo(helloBytes, clientEP);
         Console.WriteLine("[Server] Sent: 'Welcome from server' to Client\n");
     }
@@ -147,9 +147,7 @@ public class ServerUDP
                 return;
             }
 
-        // TODO: [Read the JSON file and return the list of DNSRecords]
-    
-        // TODO:[Query the DNSRecord in Json file]
+            // TODO: [Read the JSON file and return the list of DNSRecords]
             var dnsRecords = JsonSerializer.Deserialize<List<DNSRecord>>(File.ReadAllText(@"DNSrecords.json"));
             if (dnsRecords == null)
             {
@@ -158,7 +156,11 @@ public class ServerUDP
                 return;
             }
 
+            // TODO:[Query the DNSRecord in Json file]
             var dnsRecord = dnsRecords.FirstOrDefault(record => record.Type == dnsLookup.Type && record.Name == dnsLookup.Name);
+
+            // TODO:[If found send DNSLookupReply containing the DNSRecord]
+            // TODO:[If not found Send Error]
             Message dnsReplyMessage;
             if (dnsRecord != null)
             {
@@ -169,17 +171,16 @@ public class ServerUDP
                 dnsReplyMessage = new Message { MsgId = message.MsgId, MsgType = MessageType.Error, Content = "DNS record not found" };
             }
 
-        // TODO:[If found Send DNSLookupReply containing the DNSRecord]
             byte[] dnsReplyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsReplyMessage));
             serverSocket.SendTo(dnsReplyBytes, clientEP);
 
+            // TODO:[Receive Ack about correct DNSLookupReply from the client]
             // Receive Ack from the client
             byte[] buffer = new byte[1024];
             int receivedBytes = serverSocket.ReceiveFrom(buffer, ref clientEP);
             string ackMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
             var ack = JsonSerializer.Deserialize<Message>(ackMessage);
 
-        // TODO:[Receive Ack about correct DNSLookupReply from the client]
             if (ack != null && ack.MsgType == MessageType.Ack)
             {
                 Console.WriteLine("[Server] Received Ack for MsgId: " + ack.MsgId + "\n");
@@ -217,7 +218,6 @@ public class ServerUDP
 
     private static void SendError(EndPoint clientEP, int msgId, string errorMessage)
     {
-        // TODO:[If not found Send Error]
         var errorMessageObj = new Message { MsgId = msgId, MsgType = MessageType.Error, Content = errorMessage };
         byte[] errorBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(errorMessageObj));
         serverSocket.SendTo(errorBytes, clientEP);
