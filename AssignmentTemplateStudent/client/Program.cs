@@ -83,7 +83,8 @@ class ClientUDP
 
             //TODO: [Receive and print End from server]
             // Wait for End message from server
-            Console.WriteLine("[Client] Waiting for End message from server...");
+            Console.WriteLine("\n---------- End of DNS lookups ----------");
+            Console.WriteLine("\n[Client] Waiting for End message from server...");
             byte[] endBuffer = new byte[1024];
             EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
             int receivedBytes = clientSocket.ReceiveFrom(endBuffer, ref remoteEP);
@@ -149,6 +150,7 @@ class ClientUDP
         // repeat the process until all DNSLoopkups (correct and incorrect onces) are sent to server and the replies with DNSLookupReply
         try
         {
+            System.Console.WriteLine($"");
             var dnsLookups = new List<DNSRecord>
             {
                 new DNSRecord { Type = "A", Name = "www.outlook.com" },
@@ -157,9 +159,11 @@ class ClientUDP
                 new DNSRecord { Type = "M", Name = "exampl.com" }
             };
 
+            int msg = 1;
             int msgId = 33;  // Starting with the sample message ID
             foreach (var dnsLookup in dnsLookups)
             {
+                Console.WriteLine($"\n---------- Message {msg} ----------");
                 // TODO: [Create and send DNSLookup Message]
                 var dnsLookupMessage = new Message { MsgId = msgId, MsgType = MessageType.DNSLookup, Content = dnsLookup };
                 byte[] dnsLookupBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dnsLookupMessage));
@@ -202,6 +206,7 @@ class ClientUDP
                 }
                 // TODO: [Send next DNSLookup to server]
                 msgId++;
+                msg++;
             }
         }
         catch (Exception ex)

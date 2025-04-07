@@ -53,7 +53,8 @@ public class ServerUDP
                 Console.WriteLine("Invalid configuration file.");
                 return;
             }
-            // TODO: [Create a socket and endpoints and bind it to the server IP address and port number]
+
+        // TODO: [Create a socket and endpoints and bind it to the server IP address and port number]
             IPEndPoint serverEndPoint;
             try
             {
@@ -77,12 +78,13 @@ public class ServerUDP
             // TODO:[Receive and print a received Message from the client]
             byte[] buffer = new byte[1024];
             EndPoint clientEP = new IPEndPoint(IPAddress.Any, 0);
-
+            int msg = 1;
             while (true)
             {
                 int receivedBytes = serverSocket.ReceiveFrom(buffer, ref clientEP);
                 string receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-                Console.WriteLine($"[Server] Received: {receivedMessage}");
+                Console.WriteLine($"\n---------- Message {msg} ----------");
+                msg++;
 
                 var message = JsonSerializer.Deserialize<Message>(receivedMessage);
                 if (message == null)
@@ -93,6 +95,7 @@ public class ServerUDP
                 // TODO:[Handle Hello]
                 if (message.MsgType == MessageType.Hello)
                 {
+                    Console.WriteLine($"\n[Server] Received: {receivedMessage}");
                     HandleHello(clientEP);
                 }
                 // TODO:[Handle DNSLookup]
@@ -121,8 +124,8 @@ public class ServerUDP
     private static void HandleHello(EndPoint clientEP)
     {
         // TODO:[Receive and print Hello]
-        Console.WriteLine("[Server] Sending WELCOME message...");
         // TODO:[Send Welcome to the client]
+        Console.WriteLine("[Server] Sending WELCOME message...");
         var welcomeMessage = new Message { MsgId = 4, MsgType = MessageType.Welcome, Content = "Welcome from server" };
         byte[] helloBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(welcomeMessage));
         serverSocket.SendTo(helloBytes, clientEP);
@@ -132,6 +135,10 @@ public class ServerUDP
     private static void HandleDNSLookup(Message message, EndPoint clientEP)
     {
         // TODO:[Receive and print DNSLookup]
+        var dnsLookup = JsonSerializer.Deserialize<DNSRecord>(message.Content.ToString());
+        string? type = dnsLookup.Type;
+        string? name = dnsLookup.Name;
+        Console.WriteLine($"[Server] Received DNSLookup message: {{\"MsgId\":{message.MsgId},\"MsgType\":{(int)message.MsgType},\"Content\":{{\"Type\":\"{type}\",\"Name\":\"{name}\"}}}}");
         try
         {
             if (message.Content == null)
@@ -141,7 +148,6 @@ public class ServerUDP
                 return;
             }
 
-            var dnsLookup = JsonSerializer.Deserialize<DNSRecord>(message.Content.ToString());
             if (dnsLookup == null)
             {
                 Console.WriteLine("[Server] Error: Invalid DNS record format");
